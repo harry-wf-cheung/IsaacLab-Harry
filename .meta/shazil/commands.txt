@@ -1,1 +1,0 @@
-./isaaclab.sh -p scripts/imitation_learning/robomimic/train.py --task Dev-IK-Rel-v0 --algo bc --dataset _ --ensemble_size 16

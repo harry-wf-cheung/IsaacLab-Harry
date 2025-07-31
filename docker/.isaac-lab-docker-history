@@ -238,3 +238,54 @@ nano auto.sh
 ./auto.sh 
 echo $PYTHONPATH
 python3 -c "import isaaclab"
+# tmux pipe-pane -o "cat >> logs/live_log.md"
+tmux
+tmux pipe-pane -o "cat >> logs/live_log.md"
+tmux pipe-pane "cat >> logs/live-log.md"
+exit
+cd source/
+ls
+cd chills/
+apt update
+apt install tmux 
+tmux 
+exit
+tmux pipe-pane "cat >> logs/live-log.md"
+
+chmod +x run.sh 
+./run.sh
+chown -R 1002:1002 /workspace/isaaclab/source/
+./run.sh
+nvidia-smi
+kill -9 2512
+kill -9 3471
+kill -9 5857
+nvidia-smi
+./run.sh 
+chown -R 1002:1002 /workspace/isaaclab/source/
+exit
+'exit
+exit
+exit
+tmux pipe-pane -o "cat >> logs/TrrainHBC1-2.md"
+./auto.sh 
+exit
+chown -R 1002:1002 ../../..
+nvidia-smi
+tmux pipe-pane -o "cat >> logs/train_hbc_thenGen.md"
+./run.sh 
+exit
+tmux pipe-pane -o "cat >> logs/nik_gen.md"
+cd source/chills/chills
+./run.sh 
+exit
+tmux pipe-pane -o "cat >> logs/HBC_then_Gen2.md"
+exit
+cd ../..
+cd ..
+tmux pipe-pane -o "cat >> logs/HBC_then_Gen1.md"
+./auto.sh 
+tmux pipe-pane -o "cat >> logs/HBC_then_Gen1.md"
+d
+ls
+tmux pipe-pane -o "cat >> logs/HBC_then_Gen1.md"

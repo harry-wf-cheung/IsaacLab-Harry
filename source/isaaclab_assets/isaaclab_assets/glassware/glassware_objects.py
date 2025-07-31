@@ -1,5 +1,5 @@
-from isaaclab.assets import RigidObjectCfg
 
+from isaaclab.assets import RigidObjectCfg
 from isaaclab.sim.schemas.schemas_cfg import RigidBodyPropertiesCfg
 from isaaclab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
 from isaaclab.sim.spawners.wrappers import MultiUsdFileCfg
