@@ -74,7 +74,10 @@ from isaaclab_mimic.datagen.generation import env_loop, setup_async_generation, 
 from isaaclab_mimic.datagen.utils import get_env_name_from_dataset, setup_output_paths
 
 import isaaclab_tasks  # noqa: F401
-
+try:
+    import chills.task
+except ImportError:
+    pass  
 
 def main():
     num_envs = args_cli.num_envs

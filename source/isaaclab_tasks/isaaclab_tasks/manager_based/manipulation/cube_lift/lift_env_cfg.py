@@ -216,8 +216,8 @@ class ObservationsCfg():
 class EventCfg:
     """Configuration for events."""
     ## add in log helper funcs 
-    def set_loghelper(self, loghelper: LoggingHelper):    
-        self.reset_all.params["loghelper"] = loghelper
+    # def set_loghelper(self, loghelper: LoggingHelper):    
+    #     self.reset_all.params["loghelper"] = loghelper
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
 
     reset_object_position = EventTerm(

@@ -74,6 +74,11 @@ from evaluation import inject_dropout_layers, MC_dropout_uncertainty, remove_dro
 from isaaclab.utils.pretty_printer import print_table, LogRollout
 from isaaclab.utils import TrajectoryLogger
 from isaaclab.safety.safety_logic import SafetyLogic
+try:
+    import chills.task
+except ImportError:
+    pass  
+
 
 def rollout(policy, env, success_term, horizon, device, logging, traj_logging):
     """Perform a single rollout of the policy in the environment.

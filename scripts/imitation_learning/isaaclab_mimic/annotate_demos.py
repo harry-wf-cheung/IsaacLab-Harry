@@ -72,6 +72,12 @@ from isaaclab.utils.datasets import EpisodeData, HDF5DatasetFileHandler
 
 import isaaclab_tasks  # noqa: F401
 from isaaclab_tasks.utils.parse_cfg import parse_env_cfg
+try:
+    import chills.task
+except ImportError:
+    pass  
+
+
 
 is_paused = False
 current_action_index = 0

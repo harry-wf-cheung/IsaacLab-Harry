@@ -70,6 +70,10 @@ if args_cli.enable_pinocchio:
     import isaaclab_tasks.manager_based.manipulation.pick_place  # noqa: F401
 
 from isaaclab_tasks.utils import parse_env_cfg
+try:
+    import chills.task
+except ImportError:
+    pass  
 
 
 def rollout(policy, env, success_term, horizon, device):
