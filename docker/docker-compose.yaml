@@ -64,11 +64,6 @@ x-default-isaac-lab-volumes: &default-isaac-lab-volumes
   - type: bind
     source: .isaac-lab-docker-history
     target: ${DOCKER_USER_HOME}/.bash_history
-    # pull in nvoptix 
-  - type: bind
-    source: /usr/share/nvidia/nvoptix.bin
-    target: /usr/share/nvidia/nvoptix.bin
-    read_only: true
 
 x-default-isaac-lab-environment: &default-isaac-lab-environment
   - ISAACSIM_PATH=${DOCKER_ISAACLAB_PATH}/_isaac_sim
@@ -106,10 +101,6 @@ services:
     entrypoint: bash
     stdin_open: true
     tty: true
-    devices:
-    - /dev/hidraw0:/dev/hidraw0
-    - /dev/hidraw1:/dev/hidraw1
-    - /dev/hidraw2:/dev/hidraw2
 
   # This service adds a ROS2 Humble
   # installation on top of the base image
@@ -126,6 +117,8 @@ services:
         # avoid a warning message when building only the base profile
         # with the .env.base file
         - ROS2_APT_PACKAGE=${ROS2_APT_PACKAGE:-NONE}
+        # Make sure that the correct Docker Name Suffix is being passed to the dockerfile, to know which base image to
+        # start from.
         - DOCKER_NAME_SUFFIX=${DOCKER_NAME_SUFFIX-}
     image: isaac-lab-ros2${DOCKER_NAME_SUFFIX-}
     container_name: isaac-lab-ros2${DOCKER_NAME_SUFFIX-}
@@ -137,11 +130,7 @@ services:
     entrypoint: bash
     stdin_open: true
     tty: true
-    devices:
-    - /dev/hidraw0:/dev/hidraw0
-    - /dev/hidraw1:/dev/hidraw1
-    - /dev/hidraw2:/dev/hidraw2
- 
+
 volumes:
   # isaac-sim
   isaac-cache-kit:
