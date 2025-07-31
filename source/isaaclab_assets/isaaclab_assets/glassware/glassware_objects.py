@@ -92,7 +92,7 @@ class Chem_Assets:
             init_state=RigidObjectCfg.InitialStateCfg(pos=pos,rot=rot),
             spawn=UsdFileCfg(
                 usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Blocks/DexCube/dex_cube_instanceable.usd",
-                scale=(1.0, 1.0, 1.0),
+                scale=(1.2, 1.2, 1.2),
                 rigid_props=RigidBodyPropertiesCfg(
                     solver_position_iteration_count=16,
                     solver_velocity_iteration_count=1,

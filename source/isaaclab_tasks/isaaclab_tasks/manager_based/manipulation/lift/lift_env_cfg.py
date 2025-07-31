@@ -82,6 +82,22 @@ class CommandsCfg:
         ),
     )
 
+    pose_command = mdp.UniformPoseCommandCfg(
+            asset_name="robot",
+            body_name="panda_hand",
+            resampling_time_range=(0.0, 0.0), # Update every step (or define an interval)
+            debug_vis=True,
+            ranges=mdp.UniformPoseCommandCfg.Ranges(
+                # Define reasonable ranges for the end-effector target pose
+                pos_x=(0.4, 0.8),
+                pos_y=(-0.4, 0.4),
+                pos_z=(0.1, 0.6), # Z should be above the table
+                roll=(0.0, 0.0),
+                pitch=(0.0, 0.0),
+                yaw=(0.0, 0.0),
+            ),
+            make_quat_unique=False,
+
 
 @configclass
 class ActionsCfg:

@@ -72,10 +72,15 @@ if args_cli.enable_pinocchio:
 from isaaclab_tasks.utils import parse_env_cfg
 from evaluation import inject_dropout_layers, MC_dropout_uncertainty, remove_dropout_layers
 from isaaclab.utils.pretty_printer import print_table, LogRollout
-
+from isaaclab.utils import TrajectoryLogger
 from isaaclab.safety.safety_logic import SafetyLogic
+try:
+    import chills.task
+except ImportError:
+    pass  
 
-def rollout(policy, env, success_term, horizon, device, logging):
+
+def rollout(policy, env, success_term, horizon, device, logging, traj_logging):
     """Perform a single rollout of the policy in the environment.
 
     Args:
@@ -92,7 +97,7 @@ def rollout(policy, env, success_term, horizon, device, logging):
     obs_dict, _ = env.reset()
     traj = dict(actions=[], obs=[], next_obs=[], sub_obs=[], uncertainties=[], obstacles =[])
 
-    safety_logic = SafetyLogic(obs_dict["policy"]["obstacle_pos"], 0.2)
+    safety_logic = SafetyLogic(obs_dict["policy"]["obstacle_pos"], 0.3)
     
     try:
         print("obstacle initial state: ", env.cfg.scene.obstacle.init_state)
@@ -151,7 +156,8 @@ def rollout(policy, env, success_term, horizon, device, logging):
       
       #  print_table(["Step", "Variance", "Collision dist", "Safety violation"], [i, uncertainty_dict['variance'].data[-1], dist, collision_exp])
         logging.write_to_log([i, obs["joint_pos"][-1][-2].item() ,uncertainty_dict['variance'].data[-1], dist, collision_exp])
-
+      
+        traj_logging.add_data(i, obs["eef_pos"][0])
         # Check if rollout was successful
         if bool(success_term.func(env, **success_term.params)[0]):
             return True, traj
@@ -200,9 +206,10 @@ def main():
     for trial in range(args_cli.num_rollouts):
         filename = "BC_RNN_TEST_RUN_" + str(trial)
         logging = LogRollout(filename,["Step", "Gripper pose" , "Variance", "Collision dist", "Safety violation"] )
+        traj_logging = TrajectoryLogger(filename)
         print(f"[INFO] Starting trial {trial}")
         logging.new_trial(trial)
-        terminated, traj = rollout(policy, env, success_term, args_cli.horizon, device, logging)
+        terminated, traj = rollout(policy, env, success_term, args_cli.horizon, device, logging, traj_logging)
         results.append(terminated)
         logging.trial_outcome(terminated)
         print(f"[INFO] Trial {trial}: {terminated}\n")

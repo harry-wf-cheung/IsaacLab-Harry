@@ -25,7 +25,7 @@ from isaaclab.app import AppLauncher
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Tutorial on using the differential IK controller.")
 parser.add_argument("--robot", type=str, default="franka_panda", help="Name of the robot.")
-parser.add_argument("--num_envs", type=int, default=128, help="Number of environments to spawn.")
+parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to spawn.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments

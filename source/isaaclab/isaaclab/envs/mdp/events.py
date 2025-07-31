@@ -34,7 +34,7 @@ from isaaclab.terrains import TerrainImporter
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv
 
-
+from isaaclab.utils.logging_helper import LoggingHelper, ErrorType, LogType
 def randomize_rigid_body_scale(
     env: ManagerBasedEnv,
     env_ids: torch.Tensor | None,
@@ -1182,7 +1182,7 @@ def reset_scene_to_default(env: ManagerBasedEnv, env_ids: torch.Tensor, reset_jo
         # obtain default and set into the physics simulation
         nodal_state = deformable_object.data.default_nodal_state_w[env_ids].clone()
         deformable_object.write_nodal_state_to_sim(nodal_state, env_ids=env_ids)
-
+    loghelper.startEpoch()
 
 class randomize_visual_texture_material(ManagerTermBase):
     """Randomize the visual texture of bodies on an asset using Replicator API.

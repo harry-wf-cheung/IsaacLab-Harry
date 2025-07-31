@@ -18,12 +18,16 @@ class ErrorType(Enum):
 
 
 class LoggingHelper:
-    def __init__(self, logname : str= "docs/CubeStack.txt"):
+    def __init__(self, logname : str= "docs/testlog.txt"):
         self.namefile = logname
+        self.step : int =0
+        self.epochnum : int = 0
     
-    def startEpoch(self, epochnum : int):
+    def startEpoch(self):
         with open(self.namefile, "a") as f:
-            f.write(f"S:{epochnum}:Starting \n")
+            f.write(f"X:{self.epochnum}:Starting \n")
+        self.epochnum =+1
+        self.step =0
 
     def stopEpoch(self, epochnum: int):
         with open(self.namefile, "a") as f:
@@ -36,3 +40,8 @@ class LoggingHelper:
     def logerror(self, errortype: ErrorType):
         with open(self.namefile, "a") as f:
             f.write(f"T{errortype.value}:{errortype.name}:TRUE \n")
+
+    def logstep(self):
+        with open(self.namefile, "a") as f:
+            f.write(f"S:{self.step}\n")
+        self.step +=1
