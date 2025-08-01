@@ -238,6 +238,39 @@ def object_goal_norm_error(
     des_pos_b = command[:, :3]
    # print(f"desired position : {des_pos_b}, actual position : {object_pos_b}")
     error = torch.norm(des_pos_b - object_pos_b, dim=1)
+    if error<threshold:
+        loghelper.logsubtask(LogType.FINISH)
+    #print("position error : ", error)
+    return error < threshold
+
+def object_goal_norm_error(
+    env: ManagerBasedRLEnv,
+    command_name: str = "object_pose",
+    threshold: float = 0.02,
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+    loghelper : LoggingHelper = LoggingHelper()
+) -> torch.Tensor:
+    """Termination condition for the object reaching the goal position.
+
+    Args:
+        env: The environment.
+        command_name: The name of the command that is used to control the object.
+        threshold: The threshold for the object to reach the goal position. Defaults to 0.02.
+        robot_cfg: The robot configuration. Defaults to SceneEntityCfg("robot").
+        object_cfg: The object configuration. Defaults to SceneEntityCfg("object").
+
+    """
+    robot: RigidObject = env.scene[robot_cfg.name]
+    object: RigidObject = env.scene[object_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    object_pos_w = object.data.root_pos_w[:, :3]
+    object_pos_b, _ = subtract_frame_transforms(
+        robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], object_pos_w
+    )
+    des_pos_b = command[:, :3]
+   # print(f"desired position : {des_pos_b}, actual position : {object_pos_b}")
+    error = torch.norm(des_pos_b - object_pos_b, dim=1)
     #print("norm position error : ", error)
     return error 
 

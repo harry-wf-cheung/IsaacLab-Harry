@@ -90,11 +90,11 @@
             "enabled": false
         },
         "rnn": {
-            "enabled": false
+            "enabled": true
         },
         "transformer": {
             "enabled": true,
-            "context_length": 10,
+            "context_length": 20,
             "embed_dim": 512,
             "num_layers": 6,
             "num_heads": 8,

@@ -23,6 +23,19 @@ import time
 
 # args_cli = parser.parse_args()
 
+def ensemble_uncertainty(ensemble, obs):
+    outputs = [torch.from_numpy(policy(obs)) for policy in ensemble]
+    outputs = torch.stack(outputs)
+
+    mean = torch.mean(outputs, dim=0)
+    std = torch.std(outputs, dim=0)
+    variance = torch.sqrt(std)
+
+    return {
+        'mean': mean,
+        'std': std,
+        'variance': variance
+    }
 
 def MC_dropout_uncertainty(policy, obs, niters=50):
     actions = [torch.from_numpy(policy(obs)) for i in range(niters)]

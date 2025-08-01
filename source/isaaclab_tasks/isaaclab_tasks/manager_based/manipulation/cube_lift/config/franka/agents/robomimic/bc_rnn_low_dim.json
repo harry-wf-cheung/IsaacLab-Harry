@@ -1,5 +1,5 @@
 {
-    "algo_name": "bc",
+    "algo_name": "bc-rnn",
     "experiment": {
         "name": "bc_rnn",
         "validate": true,
@@ -7,14 +7,14 @@
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "bc-trans"
+            "wandb_proj_name": "bc_rnn"
         },
         "save": {
             "enabled": true,
             "every_n_seconds": null,
             "every_n_epochs": 100,
             "epochs": [],
-            "on_best_validation": false,
+            "on_best_validation": true,
             "on_best_rollout_return": false,
             "on_best_rollout_success_rate": true
         },

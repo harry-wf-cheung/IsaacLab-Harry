@@ -101,10 +101,14 @@ services:
     entrypoint: bash
     stdin_open: true
     tty: true
+<<<<<<< HEAD
     devices:
     - /dev/hidraw0:/dev/hidraw0
     - /dev/hidraw1:/dev/hidraw1
     - /dev/hidraw2:/dev/hidraw2
+=======
+    
+>>>>>>> c8c35c5f55db5dc257a8c6c341ab9e80d04de8dd
 
   # This service adds a ROS2 Humble
   # installation on top of the base image
@@ -119,7 +123,7 @@ services:
       args:
         # ROS2_APT_PACKAGE will default to NONE. This is to
         # avoid a warning message when building only the base profile
-        # with the .env.base file
+        # with the .env.base file``````
         - ROS2_APT_PACKAGE=${ROS2_APT_PACKAGE:-NONE}
         # Make sure that the correct Docker Name Suffix is being passed to the dockerfile, to know which base image to
         # start from.
@@ -134,11 +138,15 @@ services:
     entrypoint: bash
     stdin_open: true
     tty: true
+<<<<<<< HEAD
     devices:
     - /dev/hidraw0:/dev/hidraw0
     - /dev/hidraw1:/dev/hidraw1
     - /dev/hidraw2:/dev/hidraw2
       #- /dev/hidraw5:/dev/hidraw5
+=======
+
+>>>>>>> c8c35c5f55db5dc257a8c6c341ab9e80d04de8dd
     
 volumes:
   # isaac-sim

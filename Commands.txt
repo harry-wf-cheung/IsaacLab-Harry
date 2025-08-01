@@ -1,0 +1,100 @@
+ACCESS THE LAB PC: 
+xfreerdp /v:100.71.76.112 /u:student /p:ACL_DIF_1
+
+DATASET LOCATION:
+docs/datasets/dataset.hdf5
+ANNOTATED DATASET LOCATION:
+docs/datasets/annotated_dataset.hdf5
+GENERATED DATASET LOCATION:
+docs/datasets/generated_dataset.hdf5
+
+ANNOTATE:
+./isaaclab.sh -p scripts/imitation_learning/isaaclab_mimic/annotate_demos.py \
+--device cuda --task Isaac-Stack-Cube-Franka-IK-Rel-Mimic-v0 --auto \
+--input_file docs/datasets/dataset.hdf5 --output_file docs/datasets/annotated_dataset.hdf5 
+
+GENERATE:
+./isaaclab.sh -p scripts/imitation_learning/isaaclab_mimic/generate_dataset.py \
+--device cuda --headless --num_envs 500 --generation_num_trials 1000 \
+--input_file docs/datasets/annotated_dataset.hdf5 --output_file docs/datasets/generated_dataset.hdf5 
+
+TRAIN AN AGENT:
+./isaaclab.sh -p scripts/imitation_learning/robomimic/train.py \
+--task Isaac-Stack-Cube-Franka-IK-Rel-v0 --algo bc \
+--dataset docs/datasets/generated_dataset.hdf5
+
+
+cube lift task: Dev-IK-Rel-v0
+
+
+idea 1: step through the layers of a model one at a time
+		- use forward hooks to get the immediate outputs of any layer
+		- the following code will print the output of every layer during the forward pass:
+			intermediates = {}
+
+			def get_hook(name):
+			    def hook(module, input, output):
+				intermediates[name] = output
+				print(f"{name} output: {output.shape}")
+			    return hook
+
+			# Register hooks
+			hooks = []
+			for name, module in model.named_modules():
+			    if not isinstance(module, nn.Sequential) and not isinstance(module, nn.ModuleList):
+				hooks.append(module.register_forward_hook(get_hook(name)))
+
+			# Forward pass
+			output = model(input_tensor)
+
+			# Don't forget to remove hooks!
+			for h in hooks:
+			    h.remove()
+			 
+		-or use torch.fx
+		- good for models that don’t expose internals well (custom forward logic), torch.fx lets you trace and replay the graph step by step. this is the most general solution, works even for deeply nested models with custom forward() logic.
+import torch.fx
+
+# Symbolically trace the model
+traced = torch.fx.symbolic_trace(model)
+
+# Step through nodes one at a time
+env = {}
+x = input_tensor
+
+for node in traced.graph.nodes:
+    if node.op == 'placeholder':
+        env[node.name] = x
+    elif node.op == 'call_module':
+        submod = dict(traced.named_modules())[node.target]
+        env[node.name] = submod(env[node.args[0].name])
+    elif node.op == 'call_function':
+        env[node.name] = node.target(*[env[arg.name] if isinstance(arg, torch.fx.Node) else arg for arg in node.args])
+    elif node.op == 'output':
+        print("Final output:", env[node.args[0].name])
+    print(f"{node.name}: {env[node.name].shape if node.name in env else 'N/A'}")
+
+
+
+
+
+
+
+
+
+RUN DOCKER CONTAINER:
+- go to the repo, then enter the docker container by doing: 
+./docker/container.py enter ros2
+
+- then you can run a blank isaaclab simulation by typing:
+./isaaclab.sh -s
+
+you can record manual demonstrations by doing:
+./isaaclab.sh -p scripts/tools/record_demos.py --task Isaac-Stack-Cube-Franka-IK-Rel-v0 --teleop_device <teleop_device> --dataset_file ./datasets/dataset.hdf5 --num_demos 10
+
+you can then replay the dataset:
+./isaaclab.sh -p scripts/tools/replay_demos.py --task Isaac-Stack-Cube-Franka-IK-Rel-v0 --dataset_file ./datasets/dataset.hdf5
+
+
+
+

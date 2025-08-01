@@ -40,6 +40,9 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     This is the abstract base implementation, the exact scene is defined in the derived classes
     which need to set the target object, robot and end-effector frames
     """
+    #for collision
+    #obstacle: RigidObjectCfg =MISSING
+   # glassware = RigidObjectCollectionCfg(rigid_objects={"vial" : vial, "flask" : flask})
 
     # robots: will be populated by agent env cfg
     robot: ArticulationCfg = MISSING
@@ -123,11 +126,11 @@ class ObservationsCfg():
         object_position = ObsTerm(func=mdp.object_position_in_robot_root_frame)
         target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
         actions = ObsTerm(func=mdp.last_action)
-        # object_to_target = ObsTerm(func=mdp.position_command_error)
+       # object_to_target = ObsTerm(func=mdp.object_near_goal)
         eef_pos = ObsTerm(func=mdp.ee_frame_pos)
         eef_quat = ObsTerm(func=mdp.ee_frame_quat)
         gripper_pos = ObsTerm(func=mdp.gripper_pos)
-        obstacle_pos = ObsTerm(func=mdp.obstacle_position_in_robot_root_frame)
+       # obstacle_pos = ObsTerm(func=mdp.obstacle_position_in_robot_root_frame)
         #robot_pose=ObsTerm(func=mdp.robot_pose)
         #object_to_target = ObsTerm(func=mdp.position_command_error)
         #norm_error = ObsTerm(func=mdp.object_goal_norm_error)
@@ -204,8 +207,8 @@ class ObservationsCfg():
 class EventCfg:
     """Configuration for events."""
     ## add in log helper funcs 
-    # def set_loghelper(self, loghelper: LoggingHelper):    
-    #     self.reset_all.params["loghelper"] = loghelper
+    def set_loghelper(self, loghelper: LoggingHelper):    
+        self.reset_all.params["loghelper"] = loghelper
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
 
     reset_object_position = EventTerm(

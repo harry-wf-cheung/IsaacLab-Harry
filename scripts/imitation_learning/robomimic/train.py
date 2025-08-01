@@ -67,9 +67,14 @@ import sys
 import time
 import torch
 import traceback
+import subprocess
+import wandb
+
 from collections import OrderedDict
 from torch.utils.data import DataLoader
 import wandb
+from torch.utils.data import Subset
+
 import psutil
 
 # Robomimic imports
@@ -90,6 +95,7 @@ try:
 except ImportError:
     pass  
 
+from evaluation import inject_dropout_layers_for_training, remove_dropout_layers
 
 def normalize_hdf5_actions(config: Config, log_dir: str) -> str:
     """Normalizes actions in hdf5 dataset to [-1, 1] range.
@@ -137,21 +143,258 @@ def normalize_hdf5_actions(config: Config, log_dir: str) -> str:
     return normalized_path
 
 
-def train(config: Config, device: str, log_dir: str, ckpt_dir: str, video_dir: str):
-    """Train a model using the algorithm specified in config.
+# def train(config: Config, device: str, log_dir: str, ckpt_dir: str, video_dir: str):
+#     """Train a model using the algorithm specified in config.
+
+#     Args:
+#         config: Configuration object.
+#         device: PyTorch device to use for training.
+#         log_dir: Directory to save logs.
+#         ckpt_dir: Directory to save checkpoints.
+#         video_dir: Directory to save videos.
+#     """
+#     # first set seeds
+#     np.random.seed(config.train.seed)
+#     torch.manual_seed(config.train.seed)
+
+
+#     print("\n============= New Training Run with Config =============")
+#     print(config)
+#     print("")
+
+#     print(f">>> Saving logs into directory: {log_dir}")
+#     print(f">>> Saving checkpoints into directory: {ckpt_dir}")
+#     print(f">>> Saving videos into directory: {video_dir}")
+
+#     if config.experiment.logging.terminal_output_to_txt:
+#         # log stdout and stderr to a text file
+#         logger = PrintLogger(os.path.join(log_dir, "log.txt"))
+#         sys.stdout = logger
+#         sys.stderr = logger
+
+#     # read config to set up metadata for observation modalities (e.g. detecting rgb observations)
+#     ObsUtils.initialize_obs_utils_with_config(config)
+
+#     # make sure the dataset exists
+#     dataset_path = os.path.expanduser(config.train.data)
+#     if not os.path.exists(dataset_path):
+#         raise FileNotFoundError(f"Dataset at provided path {dataset_path} not found!")
+
+#     # load basic metadata from training file
+#     print("\n============= Loaded Environment Metadata =============")
+#     env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=config.train.data)
+#     shape_meta = FileUtils.get_shape_metadata_from_dataset(
+#         dataset_path=config.train.data, all_obs_keys=config.all_obs_keys, verbose=True
+#     )
+
+#     if config.experiment.env is not None:
+#         env_meta["env_name"] = config.experiment.env
+#         print("=" * 30 + "\n" + "Replacing Env to {}\n".format(env_meta["env_name"]) + "=" * 30)
+
+#     # create environment
+#     envs = OrderedDict()
+#     if config.experiment.rollout.enabled:
+#         # create environments for validation runs
+#         env_names = [env_meta["env_name"]]
+
+#         if config.experiment.additional_envs is not None:
+#             for name in config.experiment.additional_envs:
+#                 env_names.append(name)
+
+#         for env_name in env_names:
+#             env = EnvUtils.create_env_from_metadata(
+#                 env_meta=env_meta,
+#                 env_name=env_name,
+#                 render=False,
+#                 render_offscreen=config.experiment.render_video,
+#                 use_image_obs=shape_meta["use_images"],
+#             )
+#             envs[env.name] = env
+#             print(envs[env.name])
+
+#     print("")
+
+#     # setup for a new training run
+#     data_logger = DataLogger(log_dir, config=config, log_tb=config.experiment.logging.log_tb)
+#     model = algo_factory(
+#         algo_name=config.algo_name,
+#         config=config,
+#         obs_key_shapes=shape_meta["all_shapes"],
+#         ac_dim=shape_meta["ac_dim"],
+#         device=device,
+#     )
+
+#     # save the config as a json file
+#     with open(os.path.join(log_dir, "..", "config.json"), "w") as outfile:
+#         json.dump(config, outfile, indent=4)
+
+#     print("\n============= Model Summary =============")
+#     print(model)  # print model summary
+#     print("")
+    
+#     #hooks = inject_dropout_layers_for_training(model, probability=0.3)
+#     #remove_dropout_layers(hooks)
+
+#     # load training data
+#     trainset, validset = TrainUtils.load_data_for_training(config, obs_keys=shape_meta["all_obs_keys"])
+    
+#     # reduce size of the dataset
+#     og_len = len(trainset)
+#     percentage = args.dataset_percentage # keep only x% of the samples 
+#     total_size = len(trainset)
+#     num_samples = int(total_size * (percentage))
+#     indices = np.random.choice(total_size, num_samples, replace=False)
+#     trainset = Subset(trainset, indices)
+#     print(f"size of trainset after reduction is {len(trainset)}")
+#     new_len = len(trainset)
+#     retained_percent = (new_len / og_len) * 100
+#     print(f"Retained: {retained_percent:.2f}% of original dataset")
+
+#     #train_sampler = trainset.get_dataset_sampler()
+#     if isinstance(trainset, Subset):
+#         train_sampler = trainset.dataset.get_dataset_sampler()
+#     else:
+#         train_sampler = trainset.get_dataset_sampler()
+
+
+#     print("\n============= Training Dataset =============")
+#     print(trainset)
+#     print("")
+
+#     # maybe retrieve statistics for normalizing observations
+#     obs_normalization_stats = None
+#     if config.train.hdf5_normalize_obs:
+#         obs_normalization_stats = trainset.get_obs_normalization_stats()
+
+#     # initialize data loaders
+#     train_loader = DataLoader(
+#         dataset=trainset,
+#         sampler=train_sampler,
+#         batch_size=config.train.batch_size,
+#         shuffle=(train_sampler is None),
+#         num_workers=config.train.num_data_workers,
+#         drop_last=True,
+#     )
+
+#     if config.experiment.validate:
+#         # cap num workers for validation dataset at 1
+#         num_workers = min(config.train.num_data_workers, 1)
+#         valid_sampler = validset.get_dataset_sampler()
+#         valid_loader = DataLoader(
+#             dataset=validset,
+#             sampler=valid_sampler,
+#             batch_size=config.train.batch_size,
+#             shuffle=(valid_sampler is None),
+#             num_workers=num_workers,
+#             drop_last=True,
+#         )
+#     else:
+#         valid_loader = None
+
+#     # main training loop
+#     best_valid_loss = None
+#     last_ckpt_time = time.time()
+
+#     # number of learning steps per epoch (defaults to a full dataset pass)
+#     train_num_steps = config.experiment.epoch_every_n_steps
+#     valid_num_steps = config.experiment.validation_epoch_every_n_steps
+
+#     for epoch in range(1, config.train.num_epochs + 1):  # epoch numbers start at 1
+#         step_log = TrainUtils.run_epoch(model=model, data_loader=train_loader, epoch=epoch, num_steps=train_num_steps)
+#         model.on_epoch_end(epoch)
+
+#         # setup checkpoint path
+#         epoch_ckpt_name = f"model_epoch_{epoch}"
+
+#         # check for recurring checkpoint saving conditions
+#         should_save_ckpt = False
+#         if config.experiment.save.enabled:
+#             time_check = (config.experiment.save.every_n_seconds is not None) and (
+#                 time.time() - last_ckpt_time > config.experiment.save.every_n_seconds
+#             )
+#             epoch_check = (
+#                 (config.experiment.save.every_n_epochs is not None)
+#                 and (epoch > 0)
+#                 and (epoch % config.experiment.save.every_n_epochs == 0)
+#             )
+#             epoch_list_check = epoch in config.experiment.save.epochs
+#             should_save_ckpt = time_check or epoch_check or epoch_list_check
+#         ckpt_reason = None
+#         if should_save_ckpt:
+#             last_ckpt_time = time.time()
+#             ckpt_reason = "time"
+
+#         print(f"Train Epoch {epoch}")
+#         print(json.dumps(step_log, sort_keys=True, indent=4))
+#         for k, v in step_log.items():
+#             if k.startswith("Time_"):
+#                 data_logger.record(f"Timing_Stats/Train_{k[5:]}", v, epoch)
+#             else:
+#                 data_logger.record(f"Train/{k}", v, epoch)
+
+#         # Evaluate the model on validation set
+#         if config.experiment.validate:
+#             with torch.no_grad():
+#                 step_log = TrainUtils.run_epoch(
+#                     model=model, data_loader=valid_loader, epoch=epoch, validate=True, num_steps=valid_num_steps
+#                 )
+#             for k, v in step_log.items():
+#                 if k.startswith("Time_"):
+#                     data_logger.record(f"Timing_Stats/Valid_{k[5:]}", v, epoch)
+#                 else:
+#                     data_logger.record(f"Valid/{k}", v, epoch)
+
+#             print(f"Validation Epoch {epoch}")
+#             print(json.dumps(step_log, sort_keys=True, indent=4))
+
+#             # save checkpoint if achieve new best validation loss
+#             valid_check = "Loss" in step_log
+#             if valid_check and (best_valid_loss is None or (step_log["Loss"] <= best_valid_loss)):
+#                 best_valid_loss = step_log["Loss"]
+#                 if config.experiment.save.enabled and config.experiment.save.on_best_validation:
+#                     epoch_ckpt_name += f"_best_validation_{best_valid_loss}"
+#                     should_save_ckpt = True
+#                     ckpt_reason = "valid" if ckpt_reason is None else ckpt_reason
+
+#         # Save model checkpoints based on conditions (success rate, validation loss, etc)
+#         if should_save_ckpt:
+#             TrainUtils.save_model(
+#                 model=model,
+#                 config=config,
+#                 env_meta=env_meta,
+#                 shape_meta=shape_meta,
+#                 ckpt_path=os.path.join(ckpt_dir, epoch_ckpt_name + ".pth"),
+#                 obs_normalization_stats=obs_normalization_stats,
+#             )
+
+#         # Finally, log memory usage in MB
+#         process = psutil.Process(os.getpid())
+#         mem_usage = int(process.memory_info().rss / 1000000)
+#         data_logger.record("System/RAM Usage (MB)", mem_usage, epoch)
+#         print(f"\nEpoch {epoch} Memory Usage: {mem_usage} MB\n")
+
+#     # terminate logging
+#     data_logger.close()
+
+
+
+def train(config: Config, device: str, log_dirs: list[str], ckpt_dirs: list[str], video_dirs: list[str], use_config_seed: bool = True, ensemble_size: int = 1):
+    """Train an ensemble of models using the algorithm specified in config. If ensemble_size is not specified, a single model will be trained.
 
     Args:
         config: Configuration object.
         device: PyTorch device to use for training.
-        log_dir: Directory to save logs.
-        ckpt_dir: Directory to save checkpoints.
-        video_dir: Directory to save videos.
+        log_dirs: List of directories to save logs for each network in the ensemble.
+        ckpt_dirs: List of directories to save checkpoints for each network in the ensemble.
+        video_dirs: List of directories to save videos for each network in the ensemble.
     """
 
 
     # first set seeds
-    np.random.seed(config.train.seed)
-    torch.manual_seed(config.train.seed)
+    if use_config_seed:
+        np.random.seed(config.train.seed)
+        torch.manual_seed(config.train.seed)
+    
 
     print("\n============= New Training Run with Config =============")
     print(config)
@@ -168,6 +411,7 @@ def train(config: Config, device: str, log_dir: str, ckpt_dir: str, video_dir: s
         sys.stderr = logger
  
     
+
     # read config to set up metadata for observation modalities (e.g. detecting rgb observations)
     ObsUtils.initialize_obs_utils_with_config(config)
 
@@ -230,7 +474,17 @@ def train(config: Config, device: str, log_dir: str, ckpt_dir: str, video_dir: s
 
     # load training data
     trainset, validset = TrainUtils.load_data_for_training(config, obs_keys=shape_meta["all_obs_keys"])
-    train_sampler = trainset.get_dataset_sampler()
+    
+    # reduce size of the dataset
+    trainset = keep_data_percentage(trainset, args.dataset_percentage)
+
+    #train_sampler = trainset.get_dataset_sampler()
+    if isinstance(trainset, Subset):
+        train_sampler = trainset.dataset.get_dataset_sampler()
+    else:
+        train_sampler = trainset.get_dataset_sampler()
+
+
     print("\n============= Training Dataset =============")
     print(trainset)
     print("")
@@ -266,89 +520,150 @@ def train(config: Config, device: str, log_dir: str, ckpt_dir: str, video_dir: s
         valid_loader = None
 
     # main training loop
-    best_valid_loss = None
+    #best_valid_loss = None
     last_ckpt_time = time.time()
 
     # number of learning steps per epoch (defaults to a full dataset pass)
     train_num_steps = config.experiment.epoch_every_n_steps
     valid_num_steps = config.experiment.validation_epoch_every_n_steps
 
-    for epoch in range(1, config.train.num_epochs + 1):  # epoch numbers start at 1
-        step_log = TrainUtils.run_epoch(model=model, data_loader=train_loader, epoch=epoch, num_steps=train_num_steps)
-        model.on_epoch_end(epoch)
+    #config.algo.transformer.num_layers = 1
+    #config.algo.transformer.num_heads = 1
+    for model_num in range(ensemble_size):
+        # setup a wand run
+        wand_experiment_name = f"{config.experiment.name}-model{model_num}"
+        run=wandb.init(
+            project=config.experiment.logging.wandb_proj_name,
+            name=wand_experiment_name
+        )
+        run.define_metric("train reward", step_metric="episode")
+        run.define_metric("episode error", step_metric="episode")
+        # reset best valid loss
+        best_valid_loss = None
 
-        # setup checkpoint path
-        epoch_ckpt_name = f"model_epoch_{epoch}"
+        log_dir = log_dirs[model_num]
+        ckpt_dir = ckpt_dirs[model_num]
+        video_dir = video_dirs[model_num]
 
-        # check for recurring checkpoint saving conditions
-        should_save_ckpt = False
-        if config.experiment.save.enabled:
-            time_check = (config.experiment.save.every_n_seconds is not None) and (
-                time.time() - last_ckpt_time > config.experiment.save.every_n_seconds
-            )
-            epoch_check = (
-                (config.experiment.save.every_n_epochs is not None)
-                and (epoch > 0)
-                and (epoch % config.experiment.save.every_n_epochs == 0)
-            )
-            epoch_list_check = epoch in config.experiment.save.epochs
-            should_save_ckpt = time_check or epoch_check or epoch_list_check
-        ckpt_reason = None
-        if should_save_ckpt:
-            last_ckpt_time = time.time()
-            ckpt_reason = "time"
+        # setup logger stuff
+        logger = PrintLogger(os.path.join(log_dir, "log.txt"))
+        sys.stdout = logger
+        sys.stderr = logger
+        data_logger = DataLogger(log_dir, config=config, log_tb=config.experiment.logging.log_tb, log_wandb=config.experiment.logging.log_wandb,)
+        with open(os.path.join(log_dir, "..", "config.json"), "w") as outfile:
+            json.dump(config, outfile, indent=4)
 
-        print(f"Train Epoch {epoch}")
-        print(json.dumps(step_log, sort_keys=True, indent=4))
-        for k, v in step_log.items():
-            if k.startswith("Time_"):
-                data_logger.record(f"Timing_Stats/Train_{k[5:]}", v, epoch)
-            else:
-                data_logger.record(f"Train/{k}", v, epoch)
+        # initialise current network in the ensemble
+        model = algo_factory(
+            algo_name=config.algo_name,
+            config=config,
+            obs_key_shapes=shape_meta["all_shapes"],
+            ac_dim=shape_meta["ac_dim"],
+            device=device,
+        )
+        print("\n============= Model Summary =============")
+        print(model)  # print model summary
+        print("")
+        
+        for epoch in range(1, config.train.num_epochs + 1):  # epoch numbers start at 1
+            step_log = TrainUtils.run_epoch(model=model, data_loader=train_loader, epoch=epoch, num_steps=train_num_steps)
+            model.on_epoch_end(epoch)
 
-        # Evaluate the model on validation set
-        if config.experiment.validate:
-            with torch.no_grad():
-                step_log = TrainUtils.run_epoch(
-                    model=model, data_loader=valid_loader, epoch=epoch, validate=True, num_steps=valid_num_steps
+            # setup checkpoint path
+            epoch_ckpt_name = f"model_epoch_{epoch}"
+
+            # check for recurring checkpoint saving conditions
+            should_save_ckpt = False
+            if config.experiment.save.enabled:
+                time_check = (config.experiment.save.every_n_seconds is not None) and (
+                    time.time() - last_ckpt_time > config.experiment.save.every_n_seconds
                 )
+                epoch_check = (
+                    (config.experiment.save.every_n_epochs is not None)
+                    and (epoch > 0)
+                    and (epoch % config.experiment.save.every_n_epochs == 0)
+                )
+                epoch_list_check = epoch in config.experiment.save.epochs
+                should_save_ckpt = time_check or epoch_check or epoch_list_check
+            ckpt_reason = None
+            if should_save_ckpt:
+                last_ckpt_time = time.time()
+                ckpt_reason = "time"
+
+            print(f"Train Epoch {epoch}")
+            print(json.dumps(step_log, sort_keys=True, indent=4))
             for k, v in step_log.items():
                 if k.startswith("Time_"):
-                    data_logger.record(f"Timing_Stats/Valid_{k[5:]}", v, epoch)
+                    data_logger.record(f"Timing_Stats/Train_{k[5:]}", v, epoch)
                 else:
-                    data_logger.record(f"Valid/{k}", v, epoch)
+                    data_logger.record(f"Train/{k}", v, epoch)
 
-            print(f"Validation Epoch {epoch}")
-            print(json.dumps(step_log, sort_keys=True, indent=4))
+            # Evaluate the model on validation set
+            if config.experiment.validate:
+                with torch.no_grad():
+                    step_log = TrainUtils.run_epoch(
+                        model=model, data_loader=valid_loader, epoch=epoch, validate=True, num_steps=valid_num_steps
+                    )
+                for k, v in step_log.items():
+                    if k.startswith("Time_"):
+                        data_logger.record(f"Timing_Stats/Valid_{k[5:]}", v, epoch)
+                    else:
+                        data_logger.record(f"Valid/{k}", v, epoch)
 
-            # save checkpoint if achieve new best validation loss
-            valid_check = "Loss" in step_log
-            if valid_check and (best_valid_loss is None or (step_log["Loss"] <= best_valid_loss)):
-                best_valid_loss = step_log["Loss"]
-                if config.experiment.save.enabled and config.experiment.save.on_best_validation:
-                    epoch_ckpt_name += f"_best_validation_{best_valid_loss}"
-                    should_save_ckpt = True
-                    ckpt_reason = "valid" if ckpt_reason is None else ckpt_reason
+                print(f"Validation Epoch {epoch}")
+                print(json.dumps(step_log, sort_keys=True, indent=4))
 
-        # Save model checkpoints based on conditions (success rate, validation loss, etc)
-        if should_save_ckpt:
-            TrainUtils.save_model(
-                model=model,
-                config=config,
-                env_meta=env_meta,
-                shape_meta=shape_meta,
-                ckpt_path=os.path.join(ckpt_dir, epoch_ckpt_name + ".pth"),
-                obs_normalization_stats=obs_normalization_stats,
-            )
+                # save checkpoint if achieve new best validation loss
+                valid_check = "Loss" in step_log
+                if valid_check and (best_valid_loss is None or (step_log["Loss"] <= best_valid_loss)):
+                    best_valid_loss = step_log["Loss"]
+                    if config.experiment.save.enabled and config.experiment.save.on_best_validation:
+                        epoch_ckpt_name += f"_best_validation_{best_valid_loss}"
+                        should_save_ckpt = True
+                        ckpt_reason = "valid" if ckpt_reason is None else ckpt_reason
 
-        # Finally, log memory usage in MB
-        process = psutil.Process(os.getpid())
-        mem_usage = int(process.memory_info().rss / 1000000)
-        data_logger.record("System/RAM Usage (MB)", mem_usage, epoch)
-        print(f"\nEpoch {epoch} Memory Usage: {mem_usage} MB\n")
+            # Save model checkpoints based on conditions (success rate, validation loss, etc)
 
+            if should_save_ckpt:
+                TrainUtils.save_model(
+                    model=model,
+                    config=config,
+                    env_meta=env_meta,
+                    shape_meta=shape_meta,
+                    ckpt_path=os.path.join(ckpt_dir, epoch_ckpt_name + ".pth"),
+                    obs_normalization_stats=obs_normalization_stats,
+                )
+
+            # Finally, log memory usage in MB
+            process = psutil.Process(os.getpid())
+            mem_usage = int(process.memory_info().rss / 1000000)
+            data_logger.record("System/RAM Usage (MB)", mem_usage, epoch)
+            print(f"\nEpoch {epoch} Memory Usage: {mem_usage} MB\n")
+
+        #config.algo.transformer.num_layers = config.algo.transformer.num_layers + 1
+        #config.algo.transformer.num_heads = config.algo.transformer.num_heads + 1
+        run.finish()
     # terminate logging
     data_logger.close()
+
+def keep_data_percentage(trainset, percentage):
+    og_len = len(trainset)
+    # keep only x% of the samples 
+    total_size = len(trainset)
+    num_samples = int(total_size * (percentage))
+    indices = np.random.choice(total_size, num_samples, replace=False)
+    
+    trainset = Subset(trainset, indices)
+    
+    print(f"size of trainset after reduction is {len(trainset)}")
+    
+    new_len = len(trainset)
+    retained_percent = (new_len / og_len) * 100
+    
+    print(f"Retained: {retained_percent:.2f}% of original dataset")
+
+    return trainset
+
 
 
 def main(args: argparse.Namespace):
@@ -389,17 +704,33 @@ def main(args: argparse.Namespace):
 
     if args.name is not None:
         config.experiment.name = args.name
-    
-    run=wandb.init(
-        project="pick-place-tabletop",
-        name="bc_transformer"
-    )
-    run.define_metric("train reward", step_metric="episode")
-    run.define_metric("episode error", step_metric="episode")
+
+    # run=wandb.init(
+    #     project=config.experiment.logging.wandb_proj_name,
+    #     name=config.experiment.name
+    # )
+    # run.define_metric("train reward", step_metric="episode")
+    # run.define_metric("episode error", step_metric="episode")
+
     # change location of experiment directory
     config.train.output_dir = os.path.abspath(os.path.join("./logs", args.log_dir, args.task))
+    original_output_dir = config.train.output_dir
+    
+    log_dirs, ckpt_dirs, video_dirs = [], [], []
+    
+    for i in range(args.ensemble_size):
+        new_output_dir = f"{original_output_dir}/model{i}/"
+        config.train.output_dir = new_output_dir
+        log_dir, ckpt_dir, video_dir = TrainUtils.get_exp_dir(config)
 
-    log_dir, ckpt_dir, video_dir = TrainUtils.get_exp_dir(config)
+        log_dirs.append(log_dir)
+        ckpt_dirs.append(ckpt_dir)
+        video_dirs.append(video_dir)
+
+    print("=============== Ensemble Paths =============== ")
+    print(f"log_dirs: {log_dirs}")
+    print(f"ckpt_dirs: {ckpt_dirs}")
+    print(f"video_dirs: {video_dirs}")
 
     if args.normalize_training_actions:
         config.train.data = normalize_hdf5_actions(config, log_dir)
@@ -412,11 +743,19 @@ def main(args: argparse.Namespace):
     # catch error during training and print it
     res_str = "finished run successfully!"
     try:
-        train(config, device, log_dir, ckpt_dir, video_dir)
+        #train(config, device, log_dir, ckpt_dir, video_dir)
+        train(
+            config=config, 
+            device=device, 
+            log_dirs=log_dirs, ckpt_dirs=ckpt_dirs, video_dirs=video_dirs, 
+            use_config_seed=True, 
+            ensemble_size=args.ensemble_size
+        )
+        
     except Exception as e:
         res_str = f"run failed with error:\n{e}\n\n{traceback.format_exc()}"
     print(res_str)
-    run.finish()
+    #run.finish()
 
 
 if __name__ == "__main__":
@@ -442,10 +781,17 @@ if __name__ == "__main__":
     parser.add_argument("--algo", type=str, default=None, help="Name of the algorithm.")
     parser.add_argument("--log_dir", type=str, default="robomimic", help="Path to log directory")
     parser.add_argument("--normalize_training_actions", action="store_true", default=False, help="Normalize actions")
-
+    
+    parser.add_argument("--dataset_percentage", type=float, default=1.0, help="Percentage of samples from the dataset to use")
+    parser.add_argument("--ensemble_size", type=int, default=1, help="Defines the number of networks in the ensemble.")
+    
     args = parser.parse_args()
 
     # run training
     main(args)
     # close sim app
     simulation_app.close()
+
+
+
+    # ./isaaclab.sh -p scripts/imitation_learning/robomimic/train.py --task Isaac-Stack-Cube-Franka-IK-Rel-v0 --algo bc --dataset ./docs/training_data/generated_dataset_split.hdf5 --log_dir ./logs/docs/Models/bc/bcc_rnn_gmm_stack_cube_model1/
