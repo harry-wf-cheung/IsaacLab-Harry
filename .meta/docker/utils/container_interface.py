@@ -266,58 +266,33 @@ class ContainerInterface:
     Helper functions.
     """
 
-    # def _resolve_image_extension(self, yamls: list[str] | None = None, envs: list[str] | None = None):
-    #     """
-    #     Resolve the image extension by setting up YAML files, profiles, and environment files for the Docker compose command.
-
-    #     Args:
-    #         yamls: A list of yaml files to extend ``docker-compose.yaml`` settings. These are extended in the order
-    #             they are provided.
-    #         envs: A list of environment variable files to extend the ``.env.base`` file. These are extended in the order
-    #             they are provided.
-    #     """
-    #         self.add_yamls = ["--file", "docker-compose.yaml"]
-    #         self.add_profiles = ["--profile", f"{self.profile}"]
-    #         self.add_env_files = ["--env-file", ".env.base"]
-
-    #         # extend env file based on profile
-    #         if self.profile != "base":
-    #             self.add_env_files += ["--env-file", f".env.{self.profile}"]
-
-    #         # extend the env file based on the passed envs
-    #         if envs is not None:
-    #             for env in envs:
-    #                 self.add_env_files += ["--env-file", env]
-
-    #         # extend the docker-compose.yaml based on the passed yamls
-    #         if yamls is not None:
-    #             for yaml in yamls:
-    #                 self.add_yamls += ["--file", yaml]
-
     def _resolve_image_extension(self, yamls: list[str] | None = None, envs: list[str] | None = None):
-        """ Modified verison of _resolve_image_extension to override the need for .env.base """
+        """
+        Resolve the image extension by setting up YAML files, profiles, and environment files for the Docker compose command.
+
+        Args:
+            yamls: A list of yaml files to extend ``docker-compose.yaml`` settings. These are extended in the order
+                they are provided.
+            envs: A list of environment variable files to extend the ``.env.base`` file. These are extended in the order
+                they are provided.
+        """
         self.add_yamls = ["--file", "docker-compose.yaml"]
         self.add_profiles = ["--profile", f"{self.profile}"]
+        self.add_env_files = ["--env-file", ".env.base"]
 
-        env_profile_file = f".env.{self.profile}"
-        env_base_file = ".env.base"
+        # extend env file based on profile
+        if self.profile != "base":
+            self.add_env_files += ["--env-file", f".env.{self.profile}"]
 
-        # Prefer .env.{profile} if it exists, else .env.base
-        if self.profile != "base" and (self.context_dir / env_profile_file).exists():
-            self.add_env_files = ["--env-file", env_profile_file]
-        else:
-            self.add_env_files = ["--env-file", env_base_file]
-
-        # Extend with user-passed env files
+        # extend the env file based on the passed envs
         if envs is not None:
             for env in envs:
                 self.add_env_files += ["--env-file", env]
 
-        # Extend YAMLs
+        # extend the docker-compose.yaml based on the passed yamls
         if yamls is not None:
             for yaml in yamls:
                 self.add_yamls += ["--file", yaml]
-
 
     def _parse_dot_vars(self):
         """Parse the environment variables from the .env files.

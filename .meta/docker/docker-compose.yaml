@@ -42,7 +42,7 @@ x-default-isaac-lab-volumes: &default-isaac-lab-volumes
     target: ${DOCKER_ISAACLAB_PATH}/scripts
   - type: bind
     source: ../docs
-    target: ${DOCKER_ISAACLAB_PATH}/.meta/docs
+    target: ${DOCKER_ISAACLAB_PATH}/docs
   - type: bind
     source: ../tools
     target: ${DOCKER_ISAACLAB_PATH}/tools
@@ -79,20 +79,20 @@ x-default-isaac-lab-deploy: &default-isaac-lab-deploy
 
 services:
   # This service is the base Isaac Lab image
-  isaac-lab-harry:
-    profiles: [ "harry" ]
-    env_file: .env.harry
+  isaac-lab-base:
+    profiles: [ "base" ]
+    env_file: .env.base
     build:
       context: ../
-      dockerfile: docker/Dockerfile.harry
+      dockerfile: docker/Dockerfile.base
       args:
         - ISAACSIM_BASE_IMAGE_ARG=${ISAACSIM_BASE_IMAGE}
         - ISAACSIM_VERSION_ARG=${ISAACSIM_VERSION}
         - ISAACSIM_ROOT_PATH_ARG=${DOCKER_ISAACSIM_ROOT_PATH}
         - ISAACLAB_PATH_ARG=${DOCKER_ISAACLAB_PATH}
         - DOCKER_USER_HOME_ARG=${DOCKER_USER_HOME}
-    image: isaac-lab-harry${DOCKER_NAME_SUFFIX-}
-    container_name: isaac-lab-harry${DOCKER_NAME_SUFFIX-}
+    image: isaac-lab-base${DOCKER_NAME_SUFFIX-}
+    container_name: isaac-lab-base${DOCKER_NAME_SUFFIX-}
     environment: *default-isaac-lab-environment
     volumes: *default-isaac-lab-volumes
     network_mode: host
@@ -101,7 +101,47 @@ services:
     entrypoint: bash
     stdin_open: true
     tty: true
- 
+    devices:
+    - /dev/hidraw0:/dev/hidraw0
+    - /dev/hidraw1:/dev/hidraw1
+    - /dev/hidraw2:/dev/hidraw2
+    
+
+  # This service adds a ROS2 Humble
+  # installation on top of the base image
+  isaac-lab-ros2:
+    profiles: [ "ros2" ]
+    env_file:
+      - .env.base
+      - .env.ros2
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.ros2
+      args:
+        # ROS2_APT_PACKAGE will default to NONE. This is to
+        # avoid a warning message when building only the base profile
+        # with the .env.base file``````
+        - ROS2_APT_PACKAGE=${ROS2_APT_PACKAGE:-NONE}
+        # Make sure that the correct Docker Name Suffix is being passed to the dockerfile, to know which base image to
+        # start from.
+        - DOCKER_NAME_SUFFIX=${DOCKER_NAME_SUFFIX-}
+    image: isaac-lab-ros2${DOCKER_NAME_SUFFIX-}
+    container_name: isaac-lab-ros2${DOCKER_NAME_SUFFIX-}
+    environment: *default-isaac-lab-environment
+    volumes: *default-isaac-lab-volumes
+    network_mode: host
+    deploy: *default-isaac-lab-deploy
+    # This is the entrypoint for the container
+    entrypoint: bash
+    stdin_open: true
+    tty: true
+    devices:
+    - /dev/hidraw0:/dev/hidraw0
+    - /dev/hidraw1:/dev/hidraw1
+    - /dev/hidraw2:/dev/hidraw2
+      #- /dev/hidraw5:/dev/hidraw5
+
+    
 volumes:
   # isaac-sim
   isaac-cache-kit:
