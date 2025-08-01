@@ -18,7 +18,7 @@ class ErrorType(Enum):
 
 
 class LoggingHelper:
-    def __init__(self, logname : str= "docs/rollout_logger.txt"):
+    def __init__(self, logname : str= "docs/testlog.txt"):
         self.namefile = logname
         self.step : int =0
         self.epochnum : int = 0

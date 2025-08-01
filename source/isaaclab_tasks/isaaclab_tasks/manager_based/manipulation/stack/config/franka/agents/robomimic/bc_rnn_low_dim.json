@@ -5,14 +5,16 @@
         "validate": true,
         "logging": {
             "terminal_output_to_txt": true,
-            "log_tb": true
+            "log_tb": true,
+            "log_wandb": true,
+            "wandb_proj_name": "stack_task"
         },
         "save": {
             "enabled": true,
             "every_n_seconds": null,
             "every_n_epochs": 100,
             "epochs": [],
-            "on_best_validation": true,
+            "on_best_validation": false,
             "on_best_rollout_return": false,
             "on_best_rollout_success_rate": true
         },
@@ -40,7 +42,7 @@
         "goal_mode": null,
         "cuda": true,
         "batch_size": 100,
-        "num_epochs":4000,
+        "num_epochs": 2000,
         "seed": 101
     },
     "algo": {
@@ -48,7 +50,7 @@
             "policy": {
                 "optimizer_type": "adam",
                 "learning_rate": {
-                    "initial": 0.001,
+                    "initial": 0.0001,
                     "decay_factor": 0.1,
                     "epoch_schedule": [],
                     "scheduler_type": "multistep"

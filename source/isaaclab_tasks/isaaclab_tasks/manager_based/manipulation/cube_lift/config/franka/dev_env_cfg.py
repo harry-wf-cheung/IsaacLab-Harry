@@ -14,7 +14,7 @@ from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from isaaclab_tasks.manager_based.manipulation.cube_lift import mdp
 from isaaclab_tasks.manager_based.manipulation.cube_lift.lift_env_cfg import CubeEnvCfg
-from isaaclab_assets.glassware.glassware_objects_mod import Chem_Assets
+from isaaclab_assets.glassware.glassware_objects import Chem_Assets
 
 
 import math

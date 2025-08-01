@@ -40,9 +40,6 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     This is the abstract base implementation, the exact scene is defined in the derived classes
     which need to set the target object, robot and end-effector frames
     """
-    #for collision
-    #obstacle: RigidObjectCfg =MISSING
-   # glassware = RigidObjectCollectionCfg(rigid_objects={"vial" : vial, "flask" : flask})
 
     # robots: will be populated by agent env cfg
     robot: ArticulationCfg = MISSING
@@ -51,6 +48,13 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     # target object: will be populated by agent env cfg
     object: RigidObjectCfg | DeformableObjectCfg = MISSING
     
+    #for collision
+    obstacle: RigidObjectCfg =MISSING
+   
+
+   # glassware = RigidObjectCollectionCfg(rigid_objects={"vial" : vial, "flask" : flask})
+
+
     # Table
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
@@ -71,9 +75,14 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
     )
 
+    
+    
+    
+
 ##
 # MDP settings
 ##
+
 
 @configclass
 class CommandsCfg:
@@ -130,7 +139,7 @@ class ObservationsCfg():
         eef_pos = ObsTerm(func=mdp.ee_frame_pos)
         eef_quat = ObsTerm(func=mdp.ee_frame_quat)
         gripper_pos = ObsTerm(func=mdp.gripper_pos)
-       # obstacle_pos = ObsTerm(func=mdp.obstacle_position_in_robot_root_frame)
+        obstacle_pos = ObsTerm(func=mdp.obstacle_position_in_robot_root_frame)
         #robot_pose=ObsTerm(func=mdp.robot_pose)
         #object_to_target = ObsTerm(func=mdp.position_command_error)
         #norm_error = ObsTerm(func=mdp.object_goal_norm_error)
@@ -144,21 +153,21 @@ class ObservationsCfg():
         """Observations for subtask group."""
         def set_loghelper(self, loghelper: LoggingHelper):
             # Inject the logger into any terms that need it
-           # self.appr.params["loghelper"] = loghelper
+            self.appr.params["loghelper"] = loghelper
             self.grasp.params["loghelper"] = loghelper
             self.lift.params["loghelper"] = loghelper
             self.appr_goal.params["loghelper"] = loghelper
             #self.loghelper = loghelper
 
 
-        # appr = ObsTerm(
-        #     func=mdp.reach_object,
-        #     params={
-        #         "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-        #         "object_cfg": SceneEntityCfg("object"),
-        #         "std" : 0.05
-        #     }
-        # )
+        appr = ObsTerm(
+            func=mdp.reach_object,
+            params={
+                "ee_frame_cfg": SceneEntityCfg("ee_frame"),
+                "object_cfg": SceneEntityCfg("object"),
+                "std" : 0.05
+            }
+        )
         
         grasp = ObsTerm(
             func=mdp.object_grasped,
@@ -172,7 +181,7 @@ class ObservationsCfg():
             func=mdp.is_object_lifted,
             params={
                 "obj_cfg": SceneEntityCfg("object"),
-                "threshold" : 0.05
+                "threshold" : 0.1
             }
         )
         appr_goal = ObsTerm(
@@ -221,14 +230,14 @@ class EventCfg:
         },
     )
     #randomises the scale of the object 
-    # randomise_object__scale = EventTerm(
-    #     func=mdp.randomize_rigid_body_scale,
-    #     mode="prestartup",
-    #     params={
-    #         "scale_range": {"x": (0.5, 0.7), "y": (0.2, 0.6), "z": (0.2, 0.5)},
-    #         "asset_cfg": SceneEntityCfg("object", body_names="Object"),
-    #     },
-    # )
+    randomise_object__scale = EventTerm(
+        func=mdp.randomize_rigid_body_scale,
+        mode="prestartup",
+        params={
+            "scale_range": {"x": (0.5, 0.7), "y": (0.2, 0.6), "z": (0.2, 0.5)},
+            "asset_cfg": SceneEntityCfg("object", body_names="Object"),
+        },
+    )
 
 
 
@@ -276,8 +285,10 @@ class TerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
     #joint_violation = DoneTerm(func=mdp.joint_pos_out_of_limit)
+    
     #object_orientation = DoneTerm(func=mdp.bad_orientation)
-    #joint_effort = DoneTerm(func=mdp5.joint_effort_out_of_limit)
+
+    #joint_effort = DoneTerm(func=mdp.joint_effort_out_of_limit)
 
     object_dropping = DoneTerm(
         func=mdp.root_height_below_minimum, params={"minimum_height": -0.05, "asset_cfg": SceneEntityCfg("object")}
@@ -310,7 +321,7 @@ class CubeEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the lifting environment."""
     loghelper = LoggingHelper()
     # Scene settings
-    scene: ObjectTableSceneCfg = ObjectTableSceneCfg(num_envs=4096, env_spacing=2.5, replicate_physics=True)
+    scene: ObjectTableSceneCfg = ObjectTableSceneCfg(num_envs=4096, env_spacing=2.5, replicate_physics=False)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()

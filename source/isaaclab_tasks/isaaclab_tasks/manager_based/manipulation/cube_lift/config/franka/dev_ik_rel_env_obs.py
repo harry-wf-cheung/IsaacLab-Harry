@@ -14,7 +14,7 @@ from . import dev_env_cfg
 # Pre-defined configs
 ##
 from isaaclab_assets.robots.franka import FRANKA_PANDA_HIGH_PD_CFG  # isort: skip
-from isaaclab_assets.glassware.glassware_objects_mod import Chem_Assets
+from isaaclab_assets.glassware.glassware_objects import Chem_Assets
 
 @configclass
 class FrankaDevEnvCfg(dev_env_cfg.FrankaDevEnvCfg):

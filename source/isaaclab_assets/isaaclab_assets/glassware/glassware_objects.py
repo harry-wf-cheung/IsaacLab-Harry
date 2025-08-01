@@ -1,15 +1,11 @@
-
 from isaaclab.assets import RigidObjectCfg
+from isaaclab.sensors import FrameTransformerCfg
+from isaaclab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
 from isaaclab.sim.schemas.schemas_cfg import RigidBodyPropertiesCfg
 from isaaclab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
 from isaaclab.sim.spawners.wrappers import MultiUsdFileCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
-
-import os
-GLASSWARE_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_ROOT = os.path.abspath(os.path.join(GLASSWARE_DIR, "..", "..", "data", "Props", "glassware"))
-
 
 @configclass
 class Chem_Assets:
@@ -54,7 +50,7 @@ class Chem_Assets:
                 prim_path="{ENV_REGEX_NS}/" + name,
                 init_state=RigidObjectCfg.InitialStateCfg(pos = pos,rot=rot ),
                 spawn=UsdFileCfg(
-                    usd_path = os.path.join(ASSETS_ROOT, "beaker", "beaker.usd"),
+                    usd_path="/workspace/isaaclab/source/isaaclab_assets/data/Props/glassware/beaker.usd",
                     scale=(0.5, 0.5, 0.5),
                     rigid_props=self.cube_properties,
                     semantic_tags=[("class", name)],
@@ -73,18 +69,6 @@ class Chem_Assets:
                 ),
             ) 
         
-        def centre_beaker(self,pos=[0.4, 0.35, 0.0203],rot=[1, 0, 0, 0], name="Center_Beaker")-> RigidObjectCfg:
-            return RigidObjectCfg(
-                prim_path="{ENV_REGEX_NS}/" + name,
-                init_state=RigidObjectCfg.InitialStateCfg(pos = pos,rot=rot ),
-                spawn=UsdFileCfg(
-                    usd_path="/workspace/isaaclab/source/isaaclab_assets/data/Props/glassware/center_beaker.usd",
-                    scale=(1.0, 1.0, 1.0),
-                    rigid_props=self.cube_properties,
-                    semantic_tags=[("class", name)],
-                ),
-            )
-
         def random_object(self,pos=[0.65, 0.3, 0.05],rot=[0, 0, 1, 0], name="random")-> RigidObjectCfg:
             return RigidObjectCfg(
                 prim_path="{ENV_REGEX_NS}/" + name ,

@@ -180,39 +180,6 @@ def gripper_pos(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityC
 def object_near_goal(
     env: ManagerBasedRLEnv,
     command_name: str = "object_pose",
-    threshold: float = 0.03,
-    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
-    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
-    loghelper : LoggingHelper = LoggingHelper()
-) -> torch.Tensor:
-    """Termination condition for the object reaching the goal position.
-
-    Args:
-        env: The environment.
-        command_name: The name of the command that is used to control the object.
-        threshold: The threshold for the object to reach the goal position. Defaults to 0.02.
-        robot_cfg: The robot configuration. Defaults to SceneEntityCfg("robot").
-        object_cfg: The object configuration. Defaults to SceneEntityCfg("object").
-
-    """
-    robot: RigidObject = env.scene[robot_cfg.name]
-    object: RigidObject = env.scene[object_cfg.name]
-    command = env.command_manager.get_command(command_name)
-    object_pos_w = object.data.root_pos_w[:, :3]
-    object_pos_b, _ = subtract_frame_transforms(
-        robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], object_pos_w
-    )
-    des_pos_b = command[:, :3]
-   # print(f"desired position : {des_pos_b}, actual position : {object_pos_b}")
-    error = torch.norm(des_pos_b - object_pos_b, dim=1)
-    if error<threshold:
-        loghelper.logsubtask(LogType.FINISH)
-    #print("position error : ", error)
-    return error < threshold
-
-def object_goal_norm_error(
-    env: ManagerBasedRLEnv,
-    command_name: str = "object_pose",
     threshold: float = 0.02,
     robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
@@ -308,29 +275,3 @@ def logstep(
         loghelper : LoggingHelper):
     loghelper.logstep()
     return torch.tensor([0])
- #   print(robot.data.joint_pos)
-    return torch.tensor([0.04])
-
-def position_command_error(
-    env: ManagerBasedRLEnv, 
-    command_name: str = "object_pose",
-    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
-) -> torch.Tensor:
-    """Penalize tracking of the position error using L2-norm.
-
-    The function computes the position error between the desired position (from the command) and the
-    current position of the asset's body (in world frame). The position error is computed as the L2-norm
-    of the difference between the desired and current positions.
-    """
-    object: RigidObject = env.scene[object_cfg.name]
-    command = env.command_manager.get_command(command_name)
-    # extract the asset (to enable type hinting)
-    des_pos_b = command[:, :3]
-   # print("desired object position : " ,des_pos_b)
-    object_pos_w = object.data.root_pos_w
-    # End-effector position: (num_envs, 3)
-    #print("object loc : ", object_pos_w)
-    # Distance of the end-effector to the object: (num_envs,)
-    object__distance = torch.norm(object_pos_w - des_pos_b, dim=1)
-    print("[INFO] : Obejct goal distance : ", object__distance)
-    return object__distance

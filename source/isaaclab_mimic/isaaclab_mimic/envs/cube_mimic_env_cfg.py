@@ -67,7 +67,7 @@ class CubeMimicEnvCfg(FrankaDevEnvCfg, MimicEnvCfg):
                 # Corresponding key for the binary indicator in "datagen_info" for completion
                 subtask_term_signal="grasp",
                 # Time offsets for data generation when splitting a trajectory
-                subtask_term_offset_range=(0, 15),
+                subtask_term_offset_range=(0, 10),
                 # Selection strategy for source subtask segment
                 selection_strategy="nearest_neighbor_object",
                 # Optional parameters for the selection strategy function

@@ -1,13 +1,13 @@
 {
     "algo_name": "bc",
     "experiment": {
-        "name": "bc_trans",
+        "name": "bc_trans_20250722_frame_20",
         "validate": true,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "bc-trans"
+            "wandb_proj_name": "pick-place-tabletop"
         },
         "save": {
             "enabled": true,
@@ -20,7 +20,7 @@
         },
         "epoch_every_n_steps": 100,
         "validation_epoch_every_n_steps": 10,
-        "env": null,
+        "env": "Dev-IK-Rel-v0",
         "additional_envs": null,
         "render": false,
         "render_video": true,
@@ -37,15 +37,15 @@
     },
     "train": {
         "data": null,
-        "output_dir": "/models/runs/bc_trans",
+        "output_dir": "/training_runs/bc_trans",
         "num_data_workers": 1,
         "hdf5_cache_mode": "low_dim",
         "hdf5_use_swmr": true,
         "hdf5_normalize_obs": false,
         "hdf5_filter_key": "train",
         "hdf5_validation_filter_key": "valid",
+        "seq_length": 1,
         "frame_stack" : 20,
-        "seq_length": 10,
         "dataset_keys": [
             "actions",
             "rewards",
@@ -90,11 +90,12 @@
             "enabled": false
         },
         "rnn": {
-            "enabled": true
+            "enabled": false
         },
         "transformer": {
             "enabled": true,
             "context_length": 20,
+            
             "embed_dim": 512,
             "num_layers": 6,
             "num_heads": 8,
@@ -104,7 +105,8 @@
             "sinusoidal_embedding": false,
             "activation": "gelu",
             "supervise_all_steps": false,
-            "nn_parameter_for_timesteps": true 
+            "nn_parameter_for_timesteps": true
+          
         }
     },
     "observation": {
@@ -116,7 +118,7 @@
                     "gripper_pos",
                     "object_position",
                     "target_object_position",
-                    "object_to_target",
+                    
                     "joint_pos",
                     "joint_vel",
                     "actions"

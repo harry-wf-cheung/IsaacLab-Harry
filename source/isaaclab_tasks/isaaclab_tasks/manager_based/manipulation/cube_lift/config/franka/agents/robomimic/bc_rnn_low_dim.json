@@ -1,13 +1,13 @@
 {
-    "algo_name": "bc-rnn",
+    "algo_name": "bc",
     "experiment": {
-        "name": "bc_rnn",
+        "name": "bc_rnn_202507211230",
         "validate": true,
         "logging": {
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": true,
-            "wandb_proj_name": "bc_rnn"
+            "wandb_proj_name": "pick-place-tabletop"
         },
         "save": {
             "enabled": true,
@@ -15,7 +15,7 @@
             "every_n_epochs": 100,
             "epochs": [],
             "on_best_validation": true,
-            "on_best_rollout_return": false,
+            "on_best_rollout_return": true,
             "on_best_rollout_success_rate": true
         },
         "epoch_every_n_steps": 100,
@@ -23,14 +23,20 @@
         "env": "Dev-IK-Rel-v0",
         "additional_envs": null,
         "render": false,
-        "render_video": false,
+        "render_video": true,
+        "keep_all_videos": false,
+        "video_skip": 5,
         "rollout": {
-            "enabled": false
+            "enabled": false,
+            "terminate_on_success" : true,
+            "n": 50,                     
+            "horizon": 400,              
+            "rate": 50
         }
     },
     "train": {
         "data": null,
-        "output_dir": "/models/runs/bc_rnn",
+        "output_dir": "/training_runs/bc_rnn",
         "num_data_workers": 1,
         "hdf5_cache_mode": "low_dim",
         "hdf5_use_swmr": true,
@@ -39,12 +45,15 @@
         "hdf5_validation_filter_key": "valid",
         "seq_length": 10,
         "dataset_keys": [
-            "actions"
+            "actions",
+            "rewards",
+            "dones"
         ],
+        
         "goal_mode": null,
         "cuda": true,
         "batch_size": 100,
-        "num_epochs": 2000,
+        "num_epochs": 3000,
         "seed": 101
     },
     "algo": {
@@ -52,8 +61,8 @@
             "policy": {
                 "optimizer_type": "adam",
                 "learning_rate": {
-                    "initial": 0.001,
-                    "decay_factor": 0.1,
+                    "initial": 0.0001,
+                    "decay_factor": 0.01,
                     "epoch_schedule": [],
                     "scheduler_type": "multistep"
                 },
@@ -69,8 +78,8 @@
         },
         "actor_layer_dims": [],
         "gmm": {
-            "enabled": false,
-            "num_modes": 5,
+            "enabled": true,
+            "num_modes": 10,
             "min_std": 0.0001,
             "std_activation": "softplus",
             "low_noise_eval": true
