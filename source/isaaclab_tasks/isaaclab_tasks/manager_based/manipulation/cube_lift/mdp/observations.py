@@ -275,3 +275,29 @@ def logstep(
         loghelper : LoggingHelper):
     loghelper.logstep()
     return torch.tensor([0])
+ #   print(robot.data.joint_pos)
+    return torch.tensor([0.04])
+
+def position_command_error(
+    env: ManagerBasedRLEnv, 
+    command_name: str = "object_pose",
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """Penalize tracking of the position error using L2-norm.
+
+    The function computes the position error between the desired position (from the command) and the
+    current position of the asset's body (in world frame). The position error is computed as the L2-norm
+    of the difference between the desired and current positions.
+    """
+    object: RigidObject = env.scene[object_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    # extract the asset (to enable type hinting)
+    des_pos_b = command[:, :3]
+   # print("desired object position : " ,des_pos_b)
+    object_pos_w = object.data.root_pos_w
+    # End-effector position: (num_envs, 3)
+    #print("object loc : ", object_pos_w)
+    # Distance of the end-effector to the object: (num_envs,)
+    object__distance = torch.norm(object_pos_w - des_pos_b, dim=1)
+    print("[INFO] : Obejct goal distance : ", object__distance)
+    return object__distance
