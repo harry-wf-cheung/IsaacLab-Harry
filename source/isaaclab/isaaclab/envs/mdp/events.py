@@ -30,11 +30,11 @@ from isaaclab.actuators import ImplicitActuator
 from isaaclab.assets import Articulation, DeformableObject, RigidObject
 from isaaclab.managers import EventTermCfg, ManagerTermBase, SceneEntityCfg
 from isaaclab.terrains import TerrainImporter
+from isaaclab.utils.logging_helper import LoggingHelper, ErrorType, LogType
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv
 
-from isaaclab.utils.logging_helper import LoggingHelper, ErrorType, LogType
 def randomize_rigid_body_scale(
     env: ManagerBasedEnv,
     env_ids: torch.Tensor | None,
@@ -1139,7 +1139,7 @@ def reset_nodal_state_uniform(
     asset.write_nodal_state_to_sim(nodal_state, env_ids=env_ids)
 
 
-def reset_scene_to_default(env: ManagerBasedEnv, env_ids: torch.Tensor,loghelper : LoggingHelper ):
+def reset_scene_to_default(env: ManagerBasedEnv, env_ids: torch.Tensor,loghelper = LoggingHelper() ):
     """Reset the scene to the default state specified in the scene configuration."""
     # print("[DEBUG]  : Rest scene to default")
     # rigid bodies
