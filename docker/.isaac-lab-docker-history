@@ -351,3 +351,46 @@ tmux ls
 ./run.sh 
 tmux attach -t 0
 tmux attach -t 1
+tmux attach -t 2
+cd source/chills/chills
+nvidia-smi
+top
+nvidia-smi
+ps -eo pid,ppid,state,cmd | grep '[Zz]'
+ps -p 4308,6363,8386,8659,9459 -o pid,cmd
+kill 4308 6363 8386 8659 9459
+nvidia-smi
+top
+ps -p 19300,20114,20408 -o pid,cmd --ww
+cat /proc/20114/cmdline | tr '\0' ' '
+echo
+cat /proc/19300/cmdline | tr '\0' ' '; echo
+cat /proc/20408/cmdline | tr '\0' ' '; echo
+nvidia-smi 
+ps -eo pid,ppid,state,cmd | awk '$3 == "Z" {print $1, $2, $4}'
+for ppid in 4308 6363 8386 8659 9459; do     echo "$ppid: $(cat /proc/$ppid/cmdline | tr '\0' ' ')"; done
+kill 4308 6363 8386 8659 9459
+ps -eo pid,ppid,state,cmd | awk '$3 == "Z" {print $1, $2, $4}'
+nvidia-smi
+ps -eo pid,ppid,state,cmd | awk '$3 == "Z" {print $1, $2, $4}'
+ps -p 19300 -o pid,state,cmd
+for ppid in $(ps -eo pid,ppid,state,cmd | awk '$3 == "Z" {print $2}' | sort | uniq); do     ps -p $ppid -o pid,state,cmd; done
+top
+kill -9 19300
+nvidia-smi
+./run.sh 
+tmux ls
+tmux attach -t 2
+exitt
+exit
+tmux ls
+exit
+tmux attach -t 0
+tmux ls
+tmux pipe-pane -o "cat >> logs/tmux0.md"
+cd source/chills/chills
+tmux 
+./run.sh 
+tail -f source/chills/chills/logs/tmux0.md 
+tmux attach -t 0
+tmux ls
