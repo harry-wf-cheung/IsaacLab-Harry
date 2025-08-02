@@ -292,3 +292,24 @@ tmux pipe-pane -o "cat >> logs/HBC_then_Gen1.md"
 cd source/chills/chills
 ./go.sh 
 python scr/6_add_key_obs.py -f ./datasets/lift/generated10.hdf5
+python scr/8_play.py --num_rollouts 100 --checkpoint models/dev/bc_trans_1_layer/6kGen/best_val_model.pth  --task Dev-IK-Rel-v0  --device cuda --headless
+nvidia-smi
+pkill -9 1370
+pkill -9 1654
+nvidia-smi
+kill -9 1370 1654
+exit
+cd source/chills/chills
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --checkpoint models/dev/bc_trans_1_layer/6kGen/best_val_model.pth  --task Dev-IK-Rel-v0  
+pip show robomimic
+pip install robomimic==0.3.0
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --checkpoint models/dev/bc_trans_1_layer/6kGen/best_val_model.pth  --task Dev-IK-Rel-v0  
+./run.sh 
+nvidia-smi
+kill -9 4313
+./run.sh 
+tmux pipe-pane -o "cat >> logs/log.md"
+./run.sh 
+tmux pipe-pane -o "cat >> logs/tmux0.md"
+tmux
+tmux pipe-pane -o "cat >> logs/tmux1.md"
