@@ -289,3 +289,6 @@ tmux pipe-pane -o "cat >> logs/HBC_then_Gen1.md"
 d
 ls
 tmux pipe-pane -o "cat >> logs/HBC_then_Gen1.md"
+cd source/chills/chills
+./go.sh 
+python scr/6_add_key_obs.py -f ./datasets/lift/generated10.hdf5

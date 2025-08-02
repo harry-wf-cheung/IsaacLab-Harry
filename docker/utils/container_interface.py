@@ -144,7 +144,7 @@ class ContainerInterface:
             + self.add_yamls
             + self.add_profiles
             + self.add_env_files
-            + ["up", "--detach", "--build", "--remove-orphans"],
+            + ["up", "--detach", "--build"],
             check=False,
             cwd=self.context_dir,
             env=self.environ,
@@ -298,22 +298,18 @@ class ContainerInterface:
         """ Modified verison of _resolve_image_extension to override the need for .env.base """
         self.add_yamls = ["--file", "docker-compose.yaml"]
         self.add_profiles = ["--profile", f"{self.profile}"]
+        self.add_env_files = ["--env-file", ".env.harry"]
 
-        env_profile_file = f".env.{self.profile}"
-        env_base_file = ".env.base"
+        # extend env file based on profile
+        if self.profile != "harry":
+            self.add_env_files += ["--env-file", f".env.{self.profile}"]
 
-        # Prefer .env.{profile} if it exists, else .env.base
-        if self.profile != "base" and (self.context_dir / env_profile_file).exists():
-            self.add_env_files = ["--env-file", env_profile_file]
-        else:
-            self.add_env_files = ["--env-file", env_base_file]
-
-        # Extend with user-passed env files
+        # extend the env file based on the passed envs
         if envs is not None:
             for env in envs:
                 self.add_env_files += ["--env-file", env]
 
-        # Extend YAMLs
+        # extend the docker-compose.yaml based on the passed yamls
         if yamls is not None:
             for yaml in yamls:
                 self.add_yamls += ["--file", yaml]
