@@ -313,3 +313,41 @@ tmux pipe-pane -o "cat >> logs/log.md"
 tmux pipe-pane -o "cat >> logs/tmux0.md"
 tmux
 tmux pipe-pane -o "cat >> logs/tmux1.md"
+tmux attach -t 0
+./run.sh 
+nvidia-smi
+kill -9 7565
+tmux attach -t 1
+tmux attach -t 0
+chown -R 1002:1002 /workspace/isaaclab/
+./run.sh 
+nvidia-smi
+kill -9 7845
+./run.sh 
+exit
+tmux attach -t 1
+tmux attach -t 0
+./go.sh 
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --checkpoint models/dev/bc_trans_6_layer/6kGen/best_val_model.pth  --task Dev-IK-Rel-v0  
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --checkpoint models/dev/bc_trans_6_layers/6kGen/best_val_model.pth  --task Dev-IK-Rel-v0  
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --checkpoint models/dev/bc_rnn/6kGen/best_val_model.pth  --task Dev-IK-Rel-v0  
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --checkpoint models/dev/bchbckGen/best_val_model.pth  --task Dev-IK-Rel-v0  
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --checkpoint models/dev/hbc/6kGen/best_val_model.pth  --task Dev-IK-Rel-v0  
+tmux ls
+./go.sh 
+nvidia-smi
+kill -9 8119 8391 8664
+nvidia-smi
+tmux attach -t 0
+tmux pipe-pane -o "cat >> logs/tmux1.md"
+tmux
+tmux attach -t 0 \; copy-mode
+cd source/chills/chills/logs/
+tail -f tmux0.md 
+exit
+./run.sh 
+./go.sh 
+tmux ls
+./run.sh 
+tmux attach -t 0
+tmux attach -t 1
