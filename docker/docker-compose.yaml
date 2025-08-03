@@ -42,7 +42,7 @@ x-default-isaac-lab-volumes: &default-isaac-lab-volumes
     target: ${DOCKER_ISAACLAB_PATH}/scripts
   - type: bind
     source: ../docs
-    target: ${DOCKER_ISAACLAB_PATH}/.meta/docs
+    target: ${DOCKER_ISAACLAB_PATH}/docs
   - type: bind
     source: ../tools
     target: ${DOCKER_ISAACLAB_PATH}/tools
@@ -101,7 +101,31 @@ services:
     entrypoint: bash
     stdin_open: true
     tty: true
-     
+    devices:
+    - /dev/hidraw0:/dev/hidraw0
+    - /dev/hidraw1:/dev/hidraw1
+    - /dev/hidraw2:/dev/hidraw2
+    
+
+  # This service adds a ROS2 Humble
+  # installation on top of the base image
+  isaac-lab-harry:
+    profiles: [ "base" ]
+    env_file: .env.base
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.harry
+    image: isaac-lab-base
+    container_name: isaac-lab-harry
+    environment: *default-isaac-lab-environment
+    volumes: *default-isaac-lab-volumes
+    network_mode: host
+    deploy: *default-isaac-lab-deploy
+    # This is the entrypoint for the container
+    entrypoint: bash
+    stdin_open: true
+    tty: true
+
 volumes:
   # isaac-sim
   isaac-cache-kit:
