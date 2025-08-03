@@ -120,23 +120,30 @@ class ContainerInterface:
             # Create the file with sticky bit on the group
             container_history_file.touch(mode=0o2644, exist_ok=True)
 
-        # build the image for the base profile if not running base (up will build base already if profile is base)
-        if self.profile != "base":
-            subprocess.run(
-                [
-                    "docker",
-                    "compose",
-                    "--file",
-                    "docker-compose.yaml",
-                    "--env-file",
-                    ".env.base",
-                    "build",
-                    "isaac-lab-base",
-                ],
-                check=False,
-                cwd=self.context_dir,
-                env=self.environ,
-            )
+        # Build-arg injection from parsed env
+        build_args = []
+        for key in ("ISAACSIM_BASE_IMAGE_ARG", "ISAACSIM_VERSION_ARG", "DOCKER_ISAACSIM_ROOT_PATH", "DOCKER_ISAACLAB_PATH", "DOCKER_USER_HOME"):
+            if key in self.dot_vars:
+                build_args += ["--build-arg", f"{key}={self.dot_vars[key]}"]
+
+
+        # # build the image for the base profile if not running base (up will build base already if profile is base)
+        # if self.profile != "base":
+        #     subprocess.run(
+        #         [
+        #             "docker",
+        #             "compose",
+        #             "--file",
+        #             "docker-compose.yaml",
+        #             "--env-file",
+        #             ".env.base",
+        #             "build",
+        #             "isaac-lab-base",
+        #         ],
+        #         check=False,
+        #         cwd=self.context_dir,
+        #         env=self.environ,
+        #     )
 
         # build the image for the profile
         subprocess.run(
@@ -144,11 +151,25 @@ class ContainerInterface:
             + self.add_yamls
             + self.add_profiles
             + self.add_env_files
-            + ["up", "--detach", "--build"],
-            check=False,
+            + ["build"]
+            + build_args,
+            check=True,
             cwd=self.context_dir,
             env=self.environ,
         )
+
+        # then launch the container
+        subprocess.run(
+            ["docker", "compose"]
+            + self.add_yamls
+            + self.add_profiles
+            + self.add_env_files
+            + ["up", "--detach"],
+            check=True,
+            cwd=self.context_dir,
+            env=self.environ,
+        )
+
 
     def enter(self):
         """Enter the running container by executing a bash shell.
@@ -298,7 +319,7 @@ class ContainerInterface:
         """ Modified verison of _resolve_image_extension to override the need for .env.base """
         self.add_yamls = ["--file", "docker-compose.yaml"]
         self.add_profiles = ["--profile", f"{self.profile}"]
-        self.add_env_files = ["--env-file", ".env.harry"]
+        self.add_env_files = []
 
         # extend env file based on profile
         if self.profile != "harry":
@@ -316,22 +337,19 @@ class ContainerInterface:
 
 
     def _parse_dot_vars(self):
-        """Parse the environment variables from the .env files.
-
-        Based on the passed ".env" files, this function reads the environment variables and stores them in a dictionary.
-        The environment variables are read in order and overwritten if there are name conflicts, mimicking the behavior
-        of Docker compose.
-        """
+        """Parse the environment variables from the .env files."""
         self.dot_vars: dict[str, Any] = {}
 
-        # check if the number of arguments is even for the env files
         if len(self.add_env_files) % 2 != 0:
             raise RuntimeError(
                 "The parameters for env files are configured incorrectly. There should be an even number of arguments."
                 f" Received: {self.add_env_files}."
             )
 
-        # read the environment variables from the .env files
         for i in range(1, len(self.add_env_files), 2):
             with open(self.context_dir / self.add_env_files[i]) as f:
                 self.dot_vars.update(dict(line.strip().split("=", 1) for line in f if "=" in line))
+
+        # ✅ Inject into environment so Docker sees them
+        self.environ.update(self.dot_vars)
+

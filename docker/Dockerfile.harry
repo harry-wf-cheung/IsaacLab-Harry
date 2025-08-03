@@ -1,16 +1,17 @@
 # Copyright (c) 2022-2025, The Isaac Lab Project Developers.
 # SPDX-License-Identifier: BSD-3-Clause
 
-ARG USERNAME=harry
-ARG USER_UID=1002
-ARG USER_GID=1002
 
 # --- Base Isaac Sim image ---
 ARG ISAACSIM_BASE_IMAGE_ARG
 ARG ISAACSIM_VERSION_ARG
-FROM ${ISAACSIM_BASE_IMAGE_ARG}:${ISAACSIM_VERSION_ARG}
-
+FROM ${ISAACSIM_BASE_IMAGE_ARG}:${ISAACSIM_VERSION_ARG} AS base
 ENV ISAACSIM_VERSION=${ISAACSIM_VERSION_ARG}
+
+ARG USERNAME=harry
+ARG USER_UID=1002
+ARG USER_GID=1002
+
 ENV LANG=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NVIDIA_DRIVER_CAPABILITIES=all
@@ -27,6 +28,9 @@ ARG ISAACLAB_PATH_ARG
 ENV ISAACLAB_PATH=${ISAACLAB_PATH_ARG}
 ARG DOCKER_USER_HOME_ARG
 ENV DOCKER_USER_HOME=${DOCKER_USER_HOME_ARG}
+
+RUN echo "USERNAME=$USERNAME UID=$USER_UID GID=$USER_GID"
+
 
 # --- System dependencies ---
 RUN --mount=type=cache,target=/var/cache/apt \
@@ -47,7 +51,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
     apt clean autoclean && \
     rm -rf /var/lib/apt/lists/*
 
-Run groupadd --gid $USER_GID $USERNAME && \
+RUN groupadd --gid $USER_GID $USERNAME && \
     useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     usermod -aG sudo $USERNAME && \
     echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME
@@ -64,9 +68,9 @@ RUN --mount=type=cache,target=/var/cache/apt \
     ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install toml && \
     ${ISAACLAB_PATH}/isaaclab.sh --install && \
     ${ISAACLAB_PATH}/isaaclab.sh -p ${ISAACLAB_PATH}/tools/install_deps.py apt ${ISAACLAB_PATH}/source && \
-    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip uninstall -y quadprog
-    ${ISAACLAB_PATH}/_isaac_sim/python.sh -m pip install --upgrade --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128 && \
-    ${ISAACLAB_PATH}/_isaac_sim/python.sh -m pip install tensorflow scikit-learn robomimic==0.3.0
+    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip uninstall -y quadprog && \
+    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install --upgrade --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128 && \
+    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install tensorflow scikit-learn robomimic==0.3.0 && \
     apt -y autoremove && \
     apt clean autoclean && \
     rm -rf /var/lib/apt/lists/*

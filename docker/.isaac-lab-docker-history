@@ -394,3 +394,9 @@ tmux
 tail -f source/chills/chills/logs/tmux0.md 
 tmux attach -t 0
 tmux ls
+tmux pipe-pane -o "cat >> logs/tmux1.md"
+tmux attach -t 3
+tmux attach -t 2
+./run.sh 
+nvidia-smi
+exit
