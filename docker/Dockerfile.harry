@@ -1,5 +1,5 @@
 
-FROM isaac-lab-base:latest
+FROM isaac-lab-base AS harry
 
 ARG USERNAME=harry
 ARG USER_UID=1002
@@ -12,12 +12,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
         nano \
         tmux \
         hdf5-tools \
-        build-essential \
-        cmake \
         git \
-        libglib2.0-0 \
-        ncurses-term \
-        wget \
         sudo && \
     apt -y upgrade && \
     apt -y autoremove && \
