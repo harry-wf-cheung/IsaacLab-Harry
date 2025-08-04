@@ -74,9 +74,10 @@ if args_cli.enable_pinocchio:
 
 from isaaclab_tasks.utils import parse_env_cfg
 try:
-    import chills.task
+    import chills.tasks
 except ImportError:
     pass  
+
 
 from evaluation import inject_dropout_layers, MC_dropout_uncertainty, remove_dropout_layers, ensemble_uncertainty
 

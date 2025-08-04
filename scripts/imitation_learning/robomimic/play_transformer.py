@@ -73,6 +73,10 @@ from isaaclab_tasks.utils import parse_env_cfg
 from isaaclab.utils.logging_helper import LoggingHelper, ErrorType, LogType
 
 from evaluation import inject_dropout_layers, MC_dropout_uncertainty, remove_dropout_layers, mc_dropout_uncertainty_eval
+try:
+    import chills.tasks
+except ImportError:
+    pass  
 
 def rollout(policy, env, success_term, horizon, device):
     """Perform a single rollout of the policy in the environment, supporting sequence-based models."""

@@ -75,7 +75,7 @@ from isaaclab.utils.pretty_printer import print_table, LogRollout
 from isaaclab.utils import TrajectoryLogger
 from isaaclab.safety.safety_logic import SafetyLogic
 try:
-    import chills.task
+    import chills.tasks
 except ImportError:
     pass  
 

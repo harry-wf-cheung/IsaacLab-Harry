@@ -400,3 +400,56 @@ tmux attach -t 2
 ./run.sh 
 nvidia-smi
 exit
+tmux pipe-pane -o "cat >> logs/tmux0.md"
+./run.sh 
+nvidia-smi
+kill -9 477
+nvidia-smi
+isaacsim
+./run.sh 
+exit
+chown -R 1002:1002 .
+cd source/chills/chills
+tmux
+pip show
+pip list
+pip show robomimic
+task=Dev-IK-Rel-v0; mimic=Cube-Mimic-v0; dir=dev
+algo=bc_trans_6_layers
+x=6
+loop python scr/8_play.py --device cuda --headless --num_rollouts 100 --output ${algo}_rollout.md --checkpoint models/${dir}/${algo}/${x}kGen/best_val_model.pth --task $task
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --output ${algo}_rollout.md --checkpoint models/${dir}/${algo}/${x}kGen/best_val_model.pth --task $task
+exit'
+exit
+tmux pipe-pane -o "cat >> logs/tmux0.md"
+./run.sh 
+exit
+export PHYSX_GPU=0
+nvidia-smi
+pkill -f python
+nvidia-smi
+kill -9 755 1041
+nvidia-smi
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --output ${algo}_rollout.md --checkpoint models/${dir}/${algo}/${x}kGen/best_val_model.pth --task $task
+cd source/chills/chills
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --output ${algo}_rollout.md --checkpoint models/${dir}/${algo}/${x}kGen/best_val_model.pth --task $task
+algo=bc_trans_2_layers; task=Dev-IK-Rel-v0; mimic=Cube-Mimic-v0; dir=dev; x=6
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --output ${algo}_rollout.md --checkpoint models/${dir}/${algo}/${x}kGen/best_val_model.pth --task $task
+tmux l
+tmux 
+tmux ls
+tmux attach -t 0
+nvidia-smi
+export PHYSX_GPU=0
+./run.sh 
+nvidia-smi
+exit
+ls
+ps
+nvidia-smi
+python scr/8_play.py --device cuda --headless --num_rollouts 100 --output ${algo}_rollout.md --checkpoint models/${dir}/${algo}/${x}kGen/best_val_model.pth --task $task
+exit
+ps
+nvidia-smi
+tmux ls
+exit
