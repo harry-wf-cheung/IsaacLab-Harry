@@ -27,15 +27,4 @@ RUN groupadd --gid $USER_GID $USERNAME && \
 # --- Copy Isaac Lab and create symlink to Isaac Sim ---
 COPY ../ ${ISAACLAB_PATH}
 
-RUN --mount=type=cache,target=/var/cache/apt \
-    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install toml && \
-    ${ISAACLAB_PATH}/isaaclab.sh --install && \
-    ${ISAACLAB_PATH}/isaaclab.sh -p ${ISAACLAB_PATH}/tools/install_deps.py apt ${ISAACLAB_PATH}/source && \
-    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip uninstall -y quadprog && \
-    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install --upgrade --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128 && \
-    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install tensorflow scikit-learn robomimic==0.3.0 && \
-    apt -y autoremove && \
-    apt clean autoclean && \
-    rm -rf /var/lib/apt/lists/*
-
 WORKDIR ${ISAACLAB_PATH}

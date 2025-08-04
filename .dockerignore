@@ -25,3 +25,23 @@ recordings/
 _isaac_sim
 # Docker history
 docker/.isaac-lab-docker-history
+
+# Ignore folders with heavy content
+datasets/
+logs/
+output/
+models/
+data_storage/
+_isaac_sim/
+*.zip
+*.7z
+.gitmodules
+*.py[cod]
+__pycache__/
+*.log
+*.md
+*.zip
+*.7z
+*.egg-info
+build/
+dist/
