@@ -11,4 +11,33 @@
 # *.jit filter=lfs diff=lfs merge=lfs -text
 # *.hdf5 filter=lfs diff=lfs merge=lfs -text
 
-* text eol=lf
+# Normalize all text to LF in repo; check out LF on all platforms
+*        text=auto eol=lf
+
+# Treat these as binary (no EOL conversion)
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.pdf    binary
+*.zip    binary
+*.gz     binary
+*.7z     binary
+*.mp4    binary
+*.mov    binary
+*.exe    binary
+*.dll    binary
+*.so     binary
+*.usd    binary
+*.usdz   binary
+*.hdf5   binary
+
+# (Optional) explicit for common text types
+*.sh     text eol=lf
+*.py     text eol=lf
+*.js     text eol=lf
+*.ts     text eol=lf
+*.json   text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.md     text eol=lf
